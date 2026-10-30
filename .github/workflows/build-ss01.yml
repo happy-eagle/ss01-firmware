@@ -61,6 +61,8 @@ jobs:
           echo "内核: $(cat target/linux/qualcommax/Makefile | grep KERNEL_PATCHVER)"
 
       - name: 定制 feeds / 插件 / 内核核心
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           chmod +x scripts/diy.sh
           OPENWRT_DIR="$PWD/openwrt" bash scripts/diy.sh

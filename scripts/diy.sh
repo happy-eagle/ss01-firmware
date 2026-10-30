@@ -59,21 +59,35 @@ add_feed() {
   grep -q "src-git ${name} " feeds.conf.default || echo "src-git ${name} ${url}" >> feeds.conf.default
 }
 add_feed openclash  "https://github.com/vernesong/OpenClash.git;master"
-add_feed argon      "https://github.com/jerrykuku/luci-theme-argon.git;master"
-add_feed argoncfg   "https://github.com/jerrykuku/luci-app-argon-config.git;master"
 
 cat feeds.conf.default
 
 ./scripts/feeds update -a
 ./scripts/feeds install -a
 
+# Argon 主题：仓库根目录就是包本身，不能当 feed 用，直接 clone 进 package/
+for repo in luci-theme-argon luci-app-argon-config; do
+  rm -rf "package/$repo"
+  git clone --depth 1 "https://github.com/jerrykuku/$repo.git" "package/$repo"
+  rm -rf "package/$repo/.git"
+done
+
 echo "=============================================="
 echo ">>> 2/6 过滤不存在的插件（避免编译到一半炸）"
 echo "=============================================="
-./scripts/feeds list -n | tr ' ' '\n' | sed '/^$/d' | sort -u > /tmp/avail.txt
+# 注意: ./scripts/feeds list -n 输出的是 feed 名，不是包名，不能用它判断
+pkg_exists() {
+  local p="$1" d
+  [ -d "package/$p" ] && return 0
+  for d in package/feeds/*/"$p"; do
+    [ -d "$d" ] && return 0
+  done
+  return 1
+}
+
 : > /tmp/final_pkgs.txt
 for p in $PKGS; do
-  if grep -qx "$p" /tmp/avail.txt || [ -d "package/$p" ]; then
+  if pkg_exists "$p"; then
     echo "  [OK]   $p"
     echo "$p" >> /tmp/final_pkgs.txt
   else
@@ -160,16 +174,22 @@ echo "=============================================="
 echo ">>> 5/6 内置 mihomo 内核到固件"
 echo "=============================================="
 mkdir -p files/etc/openclash/core
-API="https://api.github.com/repos/MetaCubeX/mihomo/releases/latest"
-MZ_URL=$(curl -fsSL "$API" \
-  | grep -oE 'https://[^"]*mihomo-linux-arm64-v[0-9.]+\.gz' \
-  | head -1)
-if [ -z "$MZ_URL" ]; then
-  echo "  [WARN] 未取到 mihomo 下载地址，改用直连 latest 下载"
-  MZ_URL="https://github.com/MetaCubeX/mihomo/releases/latest/download/mihomo-linux-arm64-compat.gz"
-fi
+
+# 走 latest 重定向拿 tag，避开 API 限流
+TAG=$(curl -sIL -o /dev/null -w '%{url_effective}' \
+  https://github.com/MetaCubeX/mihomo/releases/latest | sed 's#.*/tag/##')
+echo "  mihomo 最新版本: ${TAG:-<未取到>}"
+MZ_URL="https://github.com/MetaCubeX/mihomo/releases/download/${TAG}/mihomo-linux-arm64-${TAG}.gz"
 echo "  下载: $MZ_URL"
-curl -fL --retry 3 "$MZ_URL" -o /tmp/mihomo.gz
+if ! curl -fL --retry 3 --max-time 300 "$MZ_URL" -o /tmp/mihomo.gz; then
+  echo "  [WARN] 直连失败，回退 API 查询"
+  MZ_URL=$(curl -fsSL -H "Authorization: Bearer ${GH_TOKEN:-}" \
+    "https://api.github.com/repos/MetaCubeX/mihomo/releases/latest" 2>/dev/null \
+    | grep -oE 'https://[^"]*mihomo-linux-arm64-v[0-9.]+\.gz' | head -1 || true)
+  [ -n "$MZ_URL" ] || { echo "!!! 取不到 mihomo 地址"; exit 1; }
+  echo "  下载: $MZ_URL"
+  curl -fL --retry 3 --max-time 300 "$MZ_URL" -o /tmp/mihomo.gz
+fi
 gunzip -f /tmp/mihomo.gz
 mv /tmp/mihomo files/etc/openclash/core/clash_meta
 chmod 0755 files/etc/openclash/core/clash_meta
