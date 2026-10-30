@@ -16,18 +16,19 @@
 
 | 插件 | 作用 | 说明 |
 |---|---|---|
-| `luci-app-openclash` | 代理客户端 | 主需求，来自 vernesong/OpenClash 源 |
+| `luci-app-openclash` | 代理客户端 | 主需求，用 immortalwrt/luci 源自带版本 |
 | `dnsmasq-full` | DNS/DHCP | 替换默认 dnsmasq，OpenClash 的 ipset/nftset 依赖它 |
-| `luci-theme-argon` | 主题 | jerrykuku 源 |
+| `luci-theme-argon` | 主题 | jerrykuku 源，直接 clone 进 package/ |
 | `luci-app-argon-config` | 主题设置 | 同上 |
 | `luci-app-ttyd` | 网页终端 | 免 SSH 客户端 |
-| `luci-app-filetransfer` | 网页文件管理 | 上传/下载/删除 |
+| `luci-app-filemanager` | 网页文件管理 | 上传/下载/删除 |
 | `luci-app-commands` | 自定义命令 | 存常用 shell 快捷方式 |
 | `luci-app-cpufreq` | CPU 调频 | IPQ6000 四核，可降频省电/超频 |
 | `luci-app-nlbwmon` | 分设备流量统计 | 旁路由查谁在跑流量 |
 | `luci-app-ddns` | 动态域名 | 公网访问 |
 | `luci-app-upnp` | 端口自动映射 | BT/PT 必备 |
-| `htop` / `nano` / `curl` / `ca-bundle` / `unzip` | CLI 工具 | 基础运维 |
+| `procps-ng` | 完整 top/ps/free | 替代 htop（immortalwrt 源里没有 htop） |
+| `nano` / `curl` / `ca-bundle` / `unzip` | CLI 工具 | 基础运维 |
 | `openssh-sftp-server` | SFTP | WinSCP 传文件 |
 | `zoneinfo-asia` | 时区 | 上海时区 |
 
@@ -70,7 +71,18 @@
 | `immortalwrt-qualcommax-ipq60xx-jdcloud_re-ss-01-squashfs-factory.bin` | 首次刷机，uboot Web 界面直接刷 |
 | `immortalwrt-qualcommax-ipq60xx-jdcloud_re-ss-01-squashfs-sysupgrade.bin` | 系统内升级（sysupgrade tar） |
 
-## 七、已知风险
+## 七、包名已逐个核验
+
+| 包 | 来源 | 结果 |
+|---|---|---|
+| `luci-app-openclash` | `immortalwrt/luci` applications/ | 存在（自带，无需第三方源） |
+| `luci-app-ttyd` / `commands` / `cpufreq` / `nlbwmon` / `ddns` / `upnp` / `filemanager` | `immortalwrt/luci` | 全部存在 |
+| `luci-app-filetransfer` | — | **不存在**，已换成 `luci-app-filemanager` |
+| `htop` | `immortalwrt/packages` | **不存在（404）**，已换成 `procps-ng` |
+| `procps-ng` / `nano` / `unzip` / `zoneinfo` / `openssh` / `curl` | `immortalwrt/packages` | 全部存在 |
+| `dnsmasq-full` / `ca-bundle` | 源码树 `package/` | 存在 |
+
+## 八、已知风险
 
 1. **刷机门槛**：亚瑟是 eMMC 机型，需要先刷第三方 uboot（TTL 或免拆漏洞），再刷 factory.bin。这一步和固件无关，但绕不开。
 2. **rootfs 分区大小**：默认 104MB，插件全装大约 60–80MB，够用。若要吃满 64G eMMC，得单独改分区表，另说。

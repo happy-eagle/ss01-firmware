@@ -16,14 +16,14 @@ luci-app-openclash
 luci-theme-argon
 luci-app-argon-config
 luci-app-ttyd
-luci-app-filetransfer
+luci-app-filemanager
 luci-app-commands
 luci-app-cpufreq
 luci-app-nlbwmon
 luci-app-ddns
 luci-app-upnp
 dnsmasq-full
-htop
+procps-ng
 nano
 curl
 ca-bundle
@@ -57,7 +57,9 @@ add_feed() {
   local name="$1" url="$2"
   grep -q "src-git ${name} " feeds.conf.default || echo "src-git ${name} ${url}" >> feeds.conf.default
 }
-add_feed openclash  "https://github.com/vernesong/OpenClash.git;master"
+# OpenClash: immortalwrt/luci 源里已自带 luci-app-openclash，不再引第三方源
+# （想用 vernesong 上游最新版时，取消下面一行注释）
+# add_feed openclash "https://github.com/vernesong/OpenClash.git;master"
 
 cat feeds.conf.default
 
