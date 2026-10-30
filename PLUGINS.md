@@ -25,7 +25,6 @@
 | `luci-app-commands` | 自定义命令 | 存常用 shell 快捷方式 |
 | `luci-app-cpufreq` | CPU 调频 | IPQ6000 四核，可降频省电/超频 |
 | `luci-app-nlbwmon` | 分设备流量统计 | 旁路由查谁在跑流量 |
-| `luci-app-wol` | 网络唤醒 | 唤醒局域网设备 |
 | `luci-app-ddns` | 动态域名 | 公网访问 |
 | `luci-app-upnp` | 端口自动映射 | BT/PT 必备 |
 | `htop` / `nano` / `curl` / `ca-bundle` / `unzip` | CLI 工具 | 基础运维 |

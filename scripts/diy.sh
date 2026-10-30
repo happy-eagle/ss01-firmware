@@ -20,7 +20,6 @@ luci-app-filetransfer
 luci-app-commands
 luci-app-cpufreq
 luci-app-nlbwmon
-luci-app-wol
 luci-app-ddns
 luci-app-upnp
 dnsmasq-full
